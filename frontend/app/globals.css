@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@300;400;500&display=swap');
+@tailwind base; @tailwind components; @tailwind utilities;
+body { background:#050505; color:#fff; font-family:Inter,sans-serif; overflow-x:hidden }
+.btn-gold { background:linear-gradient(90deg,#C99A45,#E5B96B); color:#000; font-weight:500; border-radius:999px; padding:.8rem 1.8rem }
+.btn-ghost { border:1px solid #C99A45; color:#fff; border-radius:999px; padding:.8rem 1.8rem }
+.glass { background:rgba(21,21,21,.7); backdrop-filter:blur(14px); border:1px solid #302719; border-radius:1.5rem }
+.inp { width:100%; background:#0B0B0B; border:1px solid #302719; border-radius:.75rem; padding:.9rem 1rem; outline:none }
+.inp:focus { border-color:#C99A45 }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

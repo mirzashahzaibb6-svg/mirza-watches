@@ -1,0 +1,192 @@
+generator client {
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  output       = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum PaymentMethod {
+  COD
+  JAZZCASH
+  EASYPAISA
+  PAYFAST
+  STRIPE
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  phone       String?
+  password    String
+  role        Role         @default(CUSTOMER)
+  blocked     Boolean      @default(false)
+  verified    Boolean      @default(false)
+  orders      Order[]
+  wishlist    Wishlist[]
+  reviews     Review[]
+  emailTokens EmailToken[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Collection {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  blurb    String
+  products Product[]
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  name         String
+  slug         String      @unique
+  sku          String      @unique
+  brand        String      @default("MIRZA")
+  description  String
+  price        Decimal     @db.Decimal(12, 2)
+  salePrice    Decimal?    @db.Decimal(12, 2)
+  stock        Int         @default(0)
+  rating       Float       @default(4.8)
+  reviewCount  Int         @default(0)
+  gender       String      @default("MEN")
+  images       String[]
+  specs        Json
+  featured     Boolean     @default(false)
+  published    Boolean     @default(true)
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId String?
+  items        OrderItem[]
+  wishlist     Wishlist[]
+  reviews      Review[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([collectionId])
+  @@index([createdAt])
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  user       User        @relation(fields: [userId], references: [id])
+  userId     String
+  status     OrderStatus @default(PENDING)
+  subtotal   Decimal     @db.Decimal(12, 2)
+  shipping   Decimal     @db.Decimal(12, 2)
+  discount   Decimal     @default(0) @db.Decimal(12, 2)
+  couponCode String?
+  total      Decimal     @db.Decimal(12, 2)
+  address    Json
+  items      OrderItem[]
+  payment    Payment?
+  createdAt  DateTime    @default(now())
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(12, 2)
+}
+
+model Payment {
+  id      String        @id @default(cuid())
+  order   Order         @relation(fields: [orderId], references: [id])
+  orderId String        @unique
+  method  PaymentMethod
+  status  PaymentStatus @default(PENDING)
+  amount  Decimal       @db.Decimal(12, 2)
+  txnRef  String?       @unique
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  rating    Int
+  title     String
+  body      String
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([productId, approved])
+}
+
+model Coupon {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  type      CouponType
+  value     Decimal    @db.Decimal(12, 2)
+  minOrder  Decimal    @default(0) @db.Decimal(12, 2)
+  maxUses   Int?
+  used      Int        @default(0)
+  active    Boolean    @default(true)
+  expiresAt DateTime?
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model EmailToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+}
