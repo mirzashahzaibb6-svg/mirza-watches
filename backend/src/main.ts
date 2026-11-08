@@ -13,6 +13,6 @@ async function bootstrap() {
   app.enableCors({ origin: process.env.FRONTEND_URL, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, new DocumentBuilder().setTitle('MIRZA API').build()));
-  await app.listen(4000);
+  await app.listen(process.env.PORT || 4000);;
 }
 bootstrap();
